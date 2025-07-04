@@ -3,10 +3,12 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:provider/provider.dart';
 import 'package:weathers_app/models/weather_model.dart';
 import 'package:weathers_app/services/api_service.dart';
 
 import '../models/weather_item.dart';
+import '../provider/weather_provider.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -16,13 +18,30 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+
+
   void getWeather() async {
     final data = await ApiService.fetchWeather("Tashkent");
     print("Temperature: ${data['main']['temp']}°C");
   }
 
   @override
+  void initState() {
+    super.initState();
+    Future.microtask(() {
+      Provider.of<WeatherProvider>(context, listen: false).getWeather("Tashkent");
+    });
+  }
+
+
+  @override
   Widget build(BuildContext context) {
+
+    final weatherProvider = context.watch<WeatherProvider>();
+    final weatherData = weatherProvider.weatherData;
+    final isLoading = weatherProvider.isLoading;
+
+
     return Scaffold(
       body: SafeArea(
         child: Stack(
@@ -53,7 +72,10 @@ class _HomePageState extends State<HomePage> {
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           Text("Seongnam-si", style: TextStyle(fontSize: 37)),
-                          Text("21°", style: TextStyle(fontSize: 102)),
+                          Text(
+                            weatherData != null ? "${weatherData['main']['temp']}°" : "Loading...",
+                            style: const TextStyle(fontSize: 102),
+                          ),
                           Text(
                             "Partly Cloudy",
                             style: TextStyle(fontSize: 24),
